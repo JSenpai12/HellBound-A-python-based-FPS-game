@@ -28,6 +28,8 @@ Instead of using fully 3D models for everything, the game uses 2D sprites inside
 * Enemy death
 * Enemy AI with idle/chase/attack state machine
 * Collision-aware enemy movement (won't walk through walls)
+* Player health system with damage handling
+* Enemy attacks (cooldown-based) that damage the player
 
 ## Technologies
 
