@@ -20,6 +20,9 @@ class EnemyBase(Entity):
         self.attack_range = 3
         self.sight_range = 15
         self.target = None 
+        self.attack_damage = 10
+        self.attack_speed = 1.5
+        self.attack_cooldown = 0
 
     def take_damage(self, amount):
         self.health -= amount
@@ -44,7 +47,7 @@ class EnemyBase(Entity):
         elif self.state == 'chase':
             if dist_to_target <= self.attack_range:
                 self.state = 'attack'
-            else:
+            else:   
                 self.look_at_2d(self.target.position)
                 move_direction = self.forward
                 move_distance = time.dt * self.speed
@@ -62,10 +65,17 @@ class EnemyBase(Entity):
         elif self.state == 'attack':
             if dist_to_target > self.attack_range:
                 self.state = 'chase'
-            # actual attack logic comes later
-
+            else:
+                self.attack_cooldown -= time.dt
+                if self.attack_cooldown <= 0:
+                    self.perform_attack()
+                    self.attack_cooldown = self.attack_speed
 
     def look_at_2d(self, target_position):
         direction = target_position - self.position
         angle = math.degrees(math.atan2(direction.x, direction.z))
         self.rotation_y = angle
+
+    def perform_attack(self):
+        if hasattr(self.target, 'take_damage'):
+            self.target.take_damage(self.attack_damage)
