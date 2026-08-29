@@ -19,6 +19,9 @@ class WeaponBase(Entity):
             ignore = [camera]
         )
         if hit_info.hit:
-            print(f"Hit {hit_info} for {self.damage} damage at distance {hit_info.distance}")
+            if hasattr(hit_info.entity, 'take_damage'):
+                hit_info.entity.take_damage(self.damage)
+            else:
+                print(f"Hit {hit_info.entity}, but cant take damage")
         else:
             print("Missed")

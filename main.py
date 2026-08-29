@@ -2,6 +2,7 @@ from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 from levels.level_loader import load_level
 from entities.weapons.pistol import Pistol
+from entities.enemies.imp import Imp
 
 app = Ursina()
 
@@ -15,6 +16,7 @@ player.position = start_pos
 player.gravity = 0.5
 
 weapon = Pistol()
+enemy = Imp(position=(2, 1, 3))
 
 def input(key):
     if key == 'left mouse down':
