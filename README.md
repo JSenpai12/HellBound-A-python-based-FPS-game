@@ -30,6 +30,8 @@ Instead of using fully 3D models for everything, the game uses 2D sprites inside
 * Collision-aware enemy movement (won't walk through walls)
 * Player health system with damage handling
 * Enemy attacks (cooldown-based) that damage the player
+* Ammo system (limited shots, blocks firing when empty)
+* On-screen HUD showing health and ammo
 
 ## Technologies
 

@@ -4,6 +4,7 @@ from levels.level_loader import load_level
 from entities.weapons.pistol import Pistol
 from entities.enemies.imp import Imp
 from entities.player import Player
+from ui.hud import HUD
 
 app = Ursina()
 
@@ -19,6 +20,7 @@ player.gravity = 0.5
 weapon = Pistol()
 enemy = Imp(position=(24, 1, 16))
 enemy.target = player
+hud = HUD(player, weapon)
 
 def input(key):
     if key == 'left mouse down':
