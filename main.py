@@ -16,7 +16,8 @@ player.position = start_pos
 player.gravity = 0.5
 
 weapon = Pistol()
-enemy = Imp(position=(2, 1, 3))
+enemy = Imp(position=(24, 1, 16))
+enemy.target = player
 
 def input(key):
     if key == 'left mouse down':
