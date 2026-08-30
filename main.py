@@ -10,7 +10,7 @@ app = Ursina()
 
 current_level_entities = []
 exit_trigger = None
-
+current_enemy = None
 
 def load_new_level(path, exit_position=None, next_level_path=None):
     global current_level_entities, exit_trigger
@@ -33,6 +33,13 @@ def load_new_level(path, exit_position=None, next_level_path=None):
         )
         print(f"Exit trigger created at {exit_position}")
 
+def spawn_enemy(position):
+    global current_enemy
+    if current_enemy:
+        destroy(current_enemy)
+    current_enemy = Imp(position=position)
+    current_enemy.target = player
+
 def restart_game():
     player.health = player.max_health
     player.enabled = True
@@ -41,13 +48,12 @@ def restart_game():
     exit_position=(24, 1, 4),
     next_level_path='levels/level_data/e1m2.json'
     )
+    spawn_enemy(position=(24, 1, 16))
 
 
 player = Player()
 player.gravity = 0.5
 weapon = Pistol()
-enemy = Imp(position=(24, 1, 16))
-enemy.target = player
 hud = HUD(player, weapon)
 
 load_new_level(
@@ -55,7 +61,7 @@ load_new_level(
     exit_position=(24, 1, 4),
     next_level_path='levels/level_data/e1m2.json'
 )
-
+spawn_enemy(position=(24, 1, 16))
 
 def input(key):
     if key == 'left mouse down':
