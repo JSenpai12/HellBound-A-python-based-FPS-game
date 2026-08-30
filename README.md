@@ -31,7 +31,10 @@ Instead of using fully 3D models for everything, the game uses 2D sprites inside
 * Player health system with damage handling
 * Enemy attacks (cooldown-based) that damage the player
 * Ammo system (limited shots, blocks firing when empty)
-* On-screen HUD showing health and ammo
+* Level transition system via exit triggers
+* Win condition with level-complete screen
+* Restart functionality (on death or win)
+* Enemy respawn on restart* On-screen HUD showing health and ammo
 
 ## Technologies
 
