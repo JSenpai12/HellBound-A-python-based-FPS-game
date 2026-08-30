@@ -22,6 +22,19 @@ class HUD(Entity):
             color=color.azure,
         )
 
+        self.game_over_text = Text(
+            parent = self,
+            text = '',
+            position = (-0.3, 0),
+            scale = 3,
+            color = color.red
+        )
+
     def update(self):
         self.health_text.text = f'HP: {max(self.player.health, 0)}'
         self.ammo_text.text = f'AMMO: {self.weapon.ammo}'
+
+        if self.player.health <= 0:
+            self.game_over_text.text = 'GAME OVER - Press R to Restart'
+        else:
+            self.game_over_text.text = ''

@@ -33,6 +33,15 @@ def load_new_level(path, exit_position=None, next_level_path=None):
         )
         print(f"Exit trigger created at {exit_position}")
 
+def restart_game():
+    player.health = player.max_health
+    player.enabled = True
+    load_new_level(
+    'levels/level_data/e1m1.json',
+    exit_position=(24, 1, 4),
+    next_level_path='levels/level_data/e1m2.json'
+    )
+
 
 player = Player()
 player.gravity = 0.5
@@ -51,6 +60,8 @@ load_new_level(
 def input(key):
     if key == 'left mouse down':
         weapon.fire()
-
+    if key == 'r'.lower():
+        if player.health <= 0:
+            restart_game()
 
 app.run()
