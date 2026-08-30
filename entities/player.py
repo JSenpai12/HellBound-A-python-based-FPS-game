@@ -5,6 +5,7 @@ class Player(FirstPersonController):
         super().__init__(**kwargs)
         self.max_health = health
         self.health = health
+        self.won = False
 
     def take_damage(self, amount):
         if self.health <= 0:

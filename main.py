@@ -12,7 +12,8 @@ current_level_entities = []
 exit_trigger = None
 current_enemy = None
 
-def load_new_level(path, exit_position=None, next_level_path=None):
+
+def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
     global current_level_entities, exit_trigger
 
     for e in current_level_entities:
@@ -25,13 +26,23 @@ def load_new_level(path, exit_position=None, next_level_path=None):
     current_level_entities = entities
     player.position = start_pos
 
-    if exit_position and next_level_path:
+    if exit_position and is_final:
         exit_trigger = ExitTrigger(
-            on_trigger=lambda: load_new_level(next_level_path),
+            on_trigger=lambda: win_game(),
             player=player,
             position=exit_position
         )
-        print(f"Exit trigger created at {exit_position}")
+    elif exit_position and next_level_path:
+        exit_trigger = ExitTrigger(
+            on_trigger=lambda: load_new_level(
+                next_level_path,
+                exit_position=(16, 1, 12),
+                is_final=True
+            ),
+            player=player,
+            position=exit_position
+        )
+
 
 def spawn_enemy(position):
     global current_enemy
@@ -40,13 +51,20 @@ def spawn_enemy(position):
     current_enemy = Imp(position=position)
     current_enemy.target = player
 
+
+def win_game():
+    player.won = True
+    player.enabled = False
+
+
 def restart_game():
     player.health = player.max_health
+    player.won = False
     player.enabled = True
     load_new_level(
-    'levels/level_data/e1m1.json',
-    exit_position=(24, 1, 4),
-    next_level_path='levels/level_data/e1m2.json'
+        'levels/level_data/e1m1.json',
+        exit_position=(24, 1, 4),
+        next_level_path='levels/level_data/e1m2.json'
     )
     spawn_enemy(position=(24, 1, 16))
 
@@ -63,11 +81,13 @@ load_new_level(
 )
 spawn_enemy(position=(24, 1, 16))
 
+
 def input(key):
     if key == 'left mouse down':
         weapon.fire()
-    if key == 'r'.lower():
-        if player.health <= 0:
+    if key == 'r':
+        if player.health <= 0 or player.won:
             restart_game()
+
 
 app.run()
