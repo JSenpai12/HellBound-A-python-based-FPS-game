@@ -36,7 +36,7 @@ def load_new_level(path, exit_position=None, next_level_path=None, is_final=Fals
         exit_trigger = ExitTrigger(
             on_trigger=lambda: load_new_level(
                 next_level_path,
-                exit_position=(16, 1, 12),
+                exit_position=(144, 1, 56),
                 is_final=True
             ),
             player=player,
@@ -63,7 +63,7 @@ def restart_game():
     player.enabled = True
     load_new_level(
         'levels/level_data/e1m1.json',
-        exit_position=(24, 1, 4),
+        exit_position=(120, 1, 44),
         next_level_path='levels/level_data/e1m2.json'
     )
     spawn_enemy(position=(24, 1, 16))
@@ -76,7 +76,7 @@ hud = HUD(player, weapon)
 
 load_new_level(
     'levels/level_data/e1m1.json',
-    exit_position=(24, 1, 4),
+    exit_position=(120, 1, 44),
     next_level_path='levels/level_data/e1m2.json'
 )
 spawn_enemy(position=(24, 1, 16))
