@@ -14,27 +14,7 @@ The project uses a 3D environment with 2D billboard sprites for enemies, weapons
 
 Instead of using fully 3D models for everything, the game uses 2D sprites inside a 3D environment to create a classic 2.5D appearance.
 
-## Current Features
 
-* First-person player movement
-* Player collision
-* Grid-based levels using JSON
-* Automatically generated walls and floors
-* Pistol
-* Shooting system
-* Basic enemy system
-* Imp enemy
-* Enemy health and damage
-* Enemy death
-* Enemy AI with idle/chase/attack state machine
-* Collision-aware enemy movement (won't walk through walls)
-* Player health system with damage handling
-* Enemy attacks (cooldown-based) that damage the player
-* Ammo system (limited shots, blocks firing when empty)
-* Level transition system via exit triggers
-* Win condition with level-complete screen
-* Restart functionality (on death or win)
-* Enemy respawn on restart* On-screen HUD showing health and ammo
 
 ## Technologies
 

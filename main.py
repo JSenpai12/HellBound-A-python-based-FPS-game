@@ -10,7 +10,22 @@ app = Ursina()
 
 current_level_entities = []
 exit_trigger = None
-current_enemy = None
+current_enemies = []
+
+E1M1_ENEMIES = [
+    (24, 1, 8),
+    (56, 1, 28),
+    (4, 1, 44),
+]
+
+E1M2_ENEMIES = [
+    (12, 1, 20),
+    (84, 1, 8),
+    (136, 1, 4),
+    (144, 1, 24),
+    (4, 1, 48),
+    (92, 1, 48),
+]
 
 
 def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
@@ -34,22 +49,24 @@ def load_new_level(path, exit_position=None, next_level_path=None, is_final=Fals
         )
     elif exit_position and next_level_path:
         exit_trigger = ExitTrigger(
-            on_trigger=lambda: load_new_level(
-                next_level_path,
-                exit_position=(144, 1, 56),
-                is_final=True
+            on_trigger=lambda: (
+                load_new_level(next_level_path, exit_position=(144, 1, 56), is_final=True),
+                spawn_enemies(E1M2_ENEMIES)
             ),
             player=player,
             position=exit_position
         )
 
 
-def spawn_enemy(position):
-    global current_enemy
-    if current_enemy:
-        destroy(current_enemy)
-    current_enemy = Imp(position=position)
-    current_enemy.target = player
+def spawn_enemies(positions):
+    global current_enemies
+    for e in current_enemies:
+        destroy(e)
+    current_enemies = []
+    for pos in positions:
+        enemy = Imp(position=pos)
+        enemy.target = player
+        current_enemies.append(enemy)
 
 
 def win_game():
@@ -66,7 +83,7 @@ def restart_game():
         exit_position=(120, 1, 44),
         next_level_path='levels/level_data/e1m2.json'
     )
-    spawn_enemy(position=(24, 1, 16))
+    spawn_enemies(E1M1_ENEMIES)
 
 
 player = Player()
@@ -79,7 +96,7 @@ load_new_level(
     exit_position=(120, 1, 44),
     next_level_path='levels/level_data/e1m2.json'
 )
-spawn_enemy(position=(24, 1, 16))
+spawn_enemies(E1M1_ENEMIES)
 
 
 def input(key):
