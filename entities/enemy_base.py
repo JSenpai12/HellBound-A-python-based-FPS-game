@@ -13,9 +13,13 @@ class EnemyBase(Entity):
             parent=self,
             model='quad',
             billboard=True,
-            texture='assets/textures/sprites/enemies/imp/TROOA1.png',
             color=color.white,
         )
+        self.walk_frames = []
+        self.current_frame = 0
+        self.frame_duration = 0.15
+        self.frame_timer = 0
+
         self.max_health = health
         self.health = health
         self.state = 'roam'
@@ -47,6 +51,8 @@ class EnemyBase(Entity):
         if self.health <= 0:
             return
 
+        self.animate_sprite()
+
         dist_to_target = None
         if self.target:
             dist_to_target = distance(self.position, self.target.position)
@@ -77,6 +83,15 @@ class EnemyBase(Entity):
     def perform_attack(self):
         if hasattr(self.target, 'take_damage'):
             self.target.take_damage(self.attack_damage)
+
+    def animate_sprite(self):
+        if not self.walk_frames:
+            return
+        self.frame_timer += time.dt
+        if self.frame_timer >= self.frame_duration:
+            self.frame_timer = 0
+            self.current_frame = (self.current_frame + 1) % len(self.walk_frames)
+            self.sprite.texture = self.walk_frames[self.current_frame]
 
     def move_toward(self, target_position):
         self.look_at_2d(target_position)
