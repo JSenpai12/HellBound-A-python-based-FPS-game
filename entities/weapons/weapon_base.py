@@ -1,4 +1,5 @@
-from ursina import Entity, camera, mouse, raycast, distance
+from ursina import Entity, camera, mouse, raycast, distance, time
+
 
 class WeaponBase(Entity):
     def __init__(self, damage=10, range=100, ammo=12, **kwargs):
@@ -13,22 +14,63 @@ class WeaponBase(Entity):
         self.ammo = ammo
         self.max_ammo = ammo
 
+        self.sprite = None
+        self.idle_texture = None
+        self.fire_frames = []
+        self.fire_frame_index = 0
+        self.fire_frame_timer = 0
+        self.fire_frame_duration = 0.05
+        self.firing = False
+
     def fire(self):
         if self.ammo <= 0:
             print("Out of ammo")
             return
 
         self.ammo -= 1
+        self.start_fire_animation()
+
         hit_info = raycast(
-            origin = camera.world_position,
-            direction = camera.forward,
-            distance = self.range,
-            ignore = [camera]
+            origin=camera.world_position,
+            direction=camera.forward,
+            distance=self.range,
+            ignore=[camera]
         )
         if hit_info.hit:
             if hasattr(hit_info.entity, 'take_damage'):
                 hit_info.entity.take_damage(self.damage)
             else:
-                print(f"Hit {hit_info.entity}, but cant take damage")
+                print(f"Hit {hit_info.entity}, but it can't take damage")
         else:
             print("Missed")
+
+    def start_fire_animation(self):
+        if not self.fire_frames or self.sprite is None:
+            return
+        self.firing = True
+        self.fire_frame_index = 0
+        self.fire_frame_timer = 0
+        self.sprite.texture = self.fire_frames[0]
+        self.on_fire_frame_changed(0)   # <-- notify hook for frame 0 too
+
+    def update(self):
+        if not self.firing:
+            return
+
+        self.fire_frame_timer += time.dt
+        if self.fire_frame_timer >= self.fire_frame_duration:
+            self.fire_frame_timer = 0
+            self.fire_frame_index += 1
+
+            if self.fire_frame_index >= len(self.fire_frames):
+                self.firing = False
+                if self.sprite and self.idle_texture:
+                    self.sprite.texture = self.idle_texture
+                self.on_fire_frame_changed(None)   # <-- signal "firing ended"
+            else:
+                self.sprite.texture = self.fire_frames[self.fire_frame_index]
+                self.on_fire_frame_changed(self.fire_frame_index)
+
+    def on_fire_frame_changed(self, index):
+        """Override in subclasses that need to react to frame changes (e.g. muzzle flash overlays)."""
+        pass
