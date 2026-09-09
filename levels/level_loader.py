@@ -1,5 +1,6 @@
 import json
 from ursina import Entity, color
+from core.sky import GameSky
 
 
 def load_level(path):
@@ -14,6 +15,11 @@ def load_level(path):
 
     width = len(grid[0])
     depth = len(grid)
+
+    # Sky (optional per-level texture, falls back to a default)
+    sky_texture = data.get('sky', 'SKY1.png')
+    sky = GameSky(sky_texture)
+    entities.append(sky)
 
     # Floor spans the whole grid
     floor = Entity(

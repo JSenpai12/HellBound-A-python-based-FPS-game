@@ -4,7 +4,7 @@ from entities.weapons.weapon_base import WeaponBase
 
 class Pistol(WeaponBase):
     def __init__(self):
-        super().__init__(damage=15, range=50, ammo=100)
+        super().__init__(damage=15, range=50, ammo=15)
 
         self.idle_texture = load_texture('assets/textures/sprites/weapons/pistol/PISGA0.png')
         self.fire_frames = [
