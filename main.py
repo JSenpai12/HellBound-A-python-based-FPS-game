@@ -5,19 +5,22 @@ from entities.enemies.imp import Imp
 from entities.player import Player
 from ui.hud import HUD
 from levels.levels_objects import ExitTrigger
+from ui.main_menu import MainMenu
 
 app = Ursina()
 
 current_level_entities = []
 exit_trigger = None
 current_enemies = []
+player = None
+weapon = None
+hud = None
 
 E1M1_ENEMIES = [
     (24, 1, 8),
     (56, 1, 28),
     (4, 1, 44),
 ]
-
 E1M2_ENEMIES = [
     (12, 1, 20),
     (84, 1, 8),
@@ -30,17 +33,14 @@ E1M2_ENEMIES = [
 
 def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
     global current_level_entities, exit_trigger
-
     for e in current_level_entities:
         destroy(e)
     if exit_trigger:
         destroy(exit_trigger)
         exit_trigger = None
-
     entities, start_pos = load_level(path)
     current_level_entities = entities
     player.position = start_pos
-
     if exit_position and is_final:
         exit_trigger = ExitTrigger(
             on_trigger=lambda: win_game(),
@@ -86,20 +86,31 @@ def restart_game():
     spawn_enemies(E1M1_ENEMIES)
 
 
-player = Player()
-player.gravity = 0.5
-weapon = Pistol()
-hud = HUD(player, weapon)
+def start_game():
+    global player, weapon, hud
 
-load_new_level(
-    'levels/level_data/e1m1.json',
-    exit_position=(120, 1, 44),
-    next_level_path='levels/level_data/e1m2.json'
-)
-spawn_enemies(E1M1_ENEMIES)
+    player = Player()
+    player.gravity = 0.5
+    weapon = Pistol()
+    hud = HUD(player, weapon)
+
+    load_new_level(
+        'levels/level_data/e1m1.json',
+        exit_position=(120, 1, 44),
+        next_level_path='levels/level_data/e1m2.json'
+    )
+    spawn_enemies(E1M1_ENEMIES)
+
+    mouse.locked = True
+
+
+menu = MainMenu(on_start=start_game)
+mouse.locked = False
 
 
 def input(key):
+    if weapon is None:
+        return
     if key == 'left mouse down':
         weapon.fire()
     if key == 'r':

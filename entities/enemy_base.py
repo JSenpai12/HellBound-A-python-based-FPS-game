@@ -13,7 +13,8 @@ class EnemyBase(Entity):
             parent=self,
             model='quad',
             billboard=True,
-            color=color.red,
+            texture='assets/textures/sprites/enemies/imp/TROOA1.png',
+            color=color.white,
         )
         self.max_health = health
         self.health = health

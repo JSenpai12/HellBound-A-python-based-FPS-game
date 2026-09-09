@@ -20,8 +20,7 @@ def load_level(path):
         model='plane',
         scale=(width * cell_size, 1, depth * cell_size),
         position=(width * cell_size / 2, 0, depth * cell_size / 2),
-        color=color.gray,
-        texture='white_cube',
+        texture='assets/textures/floors/FLOOR4_8.png',
         texture_scale=(width, depth),
         collider='box'
     )
@@ -35,7 +34,7 @@ def load_level(path):
                     model='cube',
                     scale=(cell_size, 4, cell_size),
                     position=(x * cell_size, 2, z * cell_size),
-                    color=color.white,
+                    texture='assets/textures/walls/WALL40_1.png',
                     collider='box'
                 )
                 entities.append(wall)
