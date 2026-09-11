@@ -116,6 +116,10 @@ def input(key):
     if key == 'r':
         if player.health <= 0 or player.won:
             restart_game()
+    if key == 'shift':
+        player.start_sprint()
+    if key == 'shift up':
+        player.stop_sprint()
 
 
 app.run()

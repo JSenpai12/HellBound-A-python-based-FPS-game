@@ -38,10 +38,18 @@ class HUD(Entity):
             scale=3,
             color=color.lime,
         )
+        self.stamina_text = Text(
+            parent=self,
+            text='',
+            position=(-0.85, -0.4),
+            scale=1.5,
+            color=color.yellow,
+        )
 
     def update(self):
         self.health_text.text = f'HP: {max(self.player.health, 0)}'
         self.ammo_text.text = f'AMMO: {self.weapon.ammo}'
+        self.stamina_text.text = f'STAMINA: {int(self.player.stamina)}'
 
         if self.player.health <= 0:
             self.game_over_text.text = 'GAME OVER - Press R to Restart'
