@@ -1,5 +1,5 @@
 from ursina import *
-from levels.level_loader import load_level
+from levels.level_loader import load_level, get_random_open_positions
 from entities.weapons.pistol import Pistol
 from entities.enemies.imp import Imp
 from entities.player import Player
@@ -16,19 +16,7 @@ player = None
 weapon = None
 hud = None
 
-E1M1_ENEMIES = [
-    (24, 1, 8),
-    (56, 1, 28),
-    (4, 1, 44),
-]
-E1M2_ENEMIES = [
-    (12, 1, 20),
-    (84, 1, 8),
-    (136, 1, 4),
-    (144, 1, 24),
-    (4, 1, 48),
-    (92, 1, 48),
-]
+
 
 
 def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
@@ -51,7 +39,7 @@ def load_new_level(path, exit_position=None, next_level_path=None, is_final=Fals
         exit_trigger = ExitTrigger(
             on_trigger=lambda: (
                 load_new_level(next_level_path, exit_position=(144, 1, 56), is_final=True),
-                spawn_enemies(E1M2_ENEMIES)
+                spawn_enemies(get_random_open_positions('levels/level_data/e1m2.json', count=25))
             ),
             player=player,
             position=exit_position
@@ -83,7 +71,7 @@ def restart_game():
         exit_position=(120, 1, 44),
         next_level_path='levels/level_data/e1m2.json'
     )
-    spawn_enemies(E1M1_ENEMIES)
+    spawn_enemies(get_random_open_positions('levels/level_data/e1m1.json', count=15))
 
 
 def start_game():
@@ -99,7 +87,7 @@ def start_game():
         exit_position=(120, 1, 44),
         next_level_path='levels/level_data/e1m2.json'
     )
-    spawn_enemies(E1M1_ENEMIES)
+    spawn_enemies(get_random_open_positions('levels/level_data/e1m1.json', count=15))
 
     mouse.locked = True
 
@@ -115,11 +103,13 @@ def input(key):
         weapon.fire()
     if key == 'r':
         if player.health <= 0 or player.won:
+            weapon.ammo = 15
             restart_game()
     if key == 'shift':
         player.start_sprint()
     if key == 'shift up':
         player.stop_sprint()
+
 
 
 app.run()

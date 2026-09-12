@@ -1,5 +1,5 @@
-import json
-from ursina import Entity, color
+import json, random
+from ursina import Entity
 from core.sky import GameSky
 
 
@@ -55,3 +55,24 @@ def load_level(path):
     )
 
     return entities, player_start_pos
+
+
+
+def get_random_open_positions(path, count, min_distance_from_start=6):
+    with open(path) as f:
+        data = json.load(f)
+
+    grid = data['grid']
+    cell_size = data.get('cell_size', 4)
+    start_x, start_z = data['player_start']
+
+    open_cells = []
+    for z, row in enumerate(grid):
+        for x, cell in enumerate(row):
+            if cell == '0':
+                dist = abs(x - start_x) + abs(z - start_z)
+                if dist >= min_distance_from_start:
+                    open_cells.append((x, z))
+
+    chosen = random.sample(open_cells, min(count, len(open_cells)))
+    return [(x * cell_size, 1, z * cell_size) for x, z in chosen]
