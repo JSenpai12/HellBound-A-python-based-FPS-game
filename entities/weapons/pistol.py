@@ -3,8 +3,8 @@ from entities.weapons.weapon_base import WeaponBase
 
 
 class Pistol(WeaponBase):
-    def __init__(self):
-        super().__init__(damage=15, range=50, ammo=15)
+    def __init__(self, player=None):
+        super().__init__(damage=15, range=50, ammo=15, player=player)
 
         self.idle_texture = load_texture('assets/textures/sprites/weapons/pistol/PISGA0.png')
         self.fire_frames = [
@@ -21,7 +21,7 @@ class Pistol(WeaponBase):
             model='quad',
             color=color.white,
             texture=self.idle_texture,
-            scale=(0.3, 0.3),
+            scale=(0.4, 0.4),
             position=(0.4, -0.35),
         )
 
@@ -31,7 +31,7 @@ class Pistol(WeaponBase):
             model='quad',
             color=color.white,
             texture=self.flash_texture,
-            scale=(0.3, 0.3),
+            scale=(0.4, 0.4),
             position=(0.38, -0.20, -0.01),
             visible=False,
         )

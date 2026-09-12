@@ -91,7 +91,7 @@ def start_game():
 
     player = Player()
     player.gravity = 0.5
-    weapon = Pistol()
+    weapon = Pistol(player=player)
     hud = HUD(player, weapon)
 
     load_new_level(
