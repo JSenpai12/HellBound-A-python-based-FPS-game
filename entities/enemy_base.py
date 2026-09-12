@@ -15,17 +15,20 @@ class EnemyBase(Entity):
             billboard=True,
             color=color.white,
         )
+        #walking Frame Attributes
         self.walk_frames = []
         self.current_frame = 0
         self.frame_duration = 0.15
         self.frame_timer = 0
 
+        #Dying Frame Attributes
         self.die_frames = []
         self.dying = False
         self.die_frame_index = 0
         self.die_frame_timer = 0
         self.die_frame_duration = 0.1
 
+        #ENEMY CHARACTERISTICS 
         self.max_health = health
         self.health = health
         self.state = 'roam'
@@ -43,6 +46,8 @@ class EnemyBase(Entity):
         self.roam_target = None
         self.roam_wait_time = 0
 
+        self.on_death = None
+
     def take_damage(self, amount):
         if self.dying:
             return
@@ -55,6 +60,8 @@ class EnemyBase(Entity):
         print(f"{self} died")
         self.dying = True
         self.collider = None
+        if self.on_death:
+            self.on_death(self.position)
         if self.die_frames:
             self.die_frame_index = 0
             self.die_frame_timer = 0

@@ -6,6 +6,9 @@ from entities.player import Player
 from ui.hud import HUD
 from levels.levels_objects import ExitTrigger
 from ui.main_menu import MainMenu
+import random
+from entities.pickups.ammo import AmmoPickup
+from entities.pickups.health import HealthPickup
 
 app = Ursina()
 
@@ -15,14 +18,20 @@ current_enemies = []
 player = None
 weapon = None
 hud = None
-
-
+active_pickups = []
+AMMO_DROP_CHANCE = 0.35
+HEALTH_DROP_CHANCE = 0.20
 
 
 def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
-    global current_level_entities, exit_trigger
+    global current_level_entities, exit_trigger, active_pickups
+
+
     for e in current_level_entities:
         destroy(e)
+    for p in active_pickups:
+        destroy(p)
+    active_pickups = []
     if exit_trigger:
         destroy(exit_trigger)
         exit_trigger = None
@@ -54,7 +63,21 @@ def spawn_enemies(positions):
     for pos in positions:
         enemy = Imp(position=pos)
         enemy.target = player
+        enemy.on_death = handle_enemy_death
         current_enemies.append(enemy)
+
+def handle_enemy_death(position):
+    global active_pickups
+
+    roll = random.random()
+    if roll < AMMO_DROP_CHANCE:
+        pickup = AmmoPickup(position=position, amount=12, weapon=weapon)
+        pickup.set_player(player)
+        active_pickups.append(pickup)
+    elif roll < AMMO_DROP_CHANCE + HEALTH_DROP_CHANCE:
+        pickup = HealthPickup(position=position, amount=25, player=player)
+        pickup.set_player(player)
+        active_pickups.append(pickup)
 
 
 def win_game():
