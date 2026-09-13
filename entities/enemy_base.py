@@ -20,7 +20,8 @@ class EnemyBase(Entity):
         self.walk_pose_order = []
         self.current_pose_index = 0
         self.frame_duration = 0.15
-        self.frame_timer = 0 
+        self.frame_timer = 0
+        self.is_moving = False
 
         #Dying Frame Attributes
         self.die_frames = []
@@ -29,7 +30,7 @@ class EnemyBase(Entity):
         self.die_frame_timer = 0
         self.die_frame_duration = 0.1
 
-        #ENEMY CHARACTERISTICS 
+        #ENEMY CHARACTERISTICS
         self.max_health = health
         self.health = health
         self.state = 'roam'
@@ -102,6 +103,7 @@ class EnemyBase(Entity):
             if dist_to_target is None or dist_to_target > self.attack_range:
                 self.state = 'chase'
             else:
+                self.is_moving = False
                 self.attack_cooldown -= time.dt
                 if self.attack_cooldown <= 0:
                     self.perform_attack()
@@ -115,10 +117,11 @@ class EnemyBase(Entity):
         if not self.walk_rotation_frames or not self.walk_pose_order:
             return
 
-        self.frame_timer += time.dt
-        if self.frame_timer >= self.frame_duration:
-            self.frame_timer = 0
-            self.current_pose_index = (self.current_pose_index + 1) % len(self.walk_pose_order)
+        if self.is_moving:
+            self.frame_timer += time.dt
+            if self.frame_timer >= self.frame_duration:
+                self.frame_timer = 0
+                self.current_pose_index = (self.current_pose_index + 1) % len(self.walk_pose_order)
 
         pose_letter = self.walk_pose_order[self.current_pose_index]
         rotation_slot, flip = self.get_rotation_slot()
@@ -153,7 +156,6 @@ class EnemyBase(Entity):
         else:
             return 2, True
 
-
     def move_toward(self, target_position):
         self.look_at_2d(target_position)
         move_direction = self.forward
@@ -168,9 +170,13 @@ class EnemyBase(Entity):
 
         if not hit_info.hit:
             self.position += move_direction * move_distance
+            self.is_moving = True
+        else:
+            self.is_moving = False
 
     def do_roam(self):
         if self.roam_target is None:
+            self.is_moving = False
             if self.roam_wait_time > 0:
                 self.roam_wait_time -= time.dt
                 return
@@ -180,12 +186,14 @@ class EnemyBase(Entity):
             if dist_to_roam < 0.5:
                 self.roam_target = None
                 self.roam_wait_time = random.uniform(1, 3)
+                self.is_moving = False
             else:
                 before_pos = self.position
                 self.move_toward(self.roam_target)
                 if self.position == before_pos:
                     self.roam_target = None
                     self.roam_wait_time = random.uniform(0.5, 1)
+                    self.is_moving = False
 
     def pick_new_roam_target(self):
         angle = random.uniform(0, 360)
