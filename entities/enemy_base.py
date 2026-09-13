@@ -1,6 +1,6 @@
 import math
 import random
-from ursina import Entity, color, destroy, distance, time, raycast, Vec3
+from ursina import Entity, color, destroy, distance, time, raycast, Vec3, camera
 
 
 class EnemyBase(Entity):
@@ -15,11 +15,12 @@ class EnemyBase(Entity):
             billboard=True,
             color=color.white,
         )
-        #walking Frame Attributes
-        self.walk_frames = []
-        self.current_frame = 0
+        # Walk animation attributes
+        self.walk_rotation_frames = {}
+        self.walk_pose_order = []
+        self.current_pose_index = 0
         self.frame_duration = 0.15
-        self.frame_timer = 0
+        self.frame_timer = 0 
 
         #Dying Frame Attributes
         self.die_frames = []
@@ -111,13 +112,47 @@ class EnemyBase(Entity):
             self.target.take_damage(self.attack_damage)
 
     def animate_sprite(self):
-        if not self.walk_frames:
+        if not self.walk_rotation_frames or not self.walk_pose_order:
             return
+
         self.frame_timer += time.dt
         if self.frame_timer >= self.frame_duration:
             self.frame_timer = 0
-            self.current_frame = (self.current_frame + 1) % len(self.walk_frames)
-            self.sprite.texture = self.walk_frames[self.current_frame]
+            self.current_pose_index = (self.current_pose_index + 1) % len(self.walk_pose_order)
+
+        pose_letter = self.walk_pose_order[self.current_pose_index]
+        rotation_slot, flip = self.get_rotation_slot()
+        pose_frames = self.walk_rotation_frames.get(pose_letter, {})
+        texture = pose_frames.get(rotation_slot)
+
+        if texture:
+            self.sprite.texture = texture
+            self.sprite.texture_scale = (-1, 1) if flip else (1, 1)
+
+    def get_rotation_slot(self):
+        to_camera = camera.world_position - self.world_position
+        to_camera.y = 0
+        camera_angle = math.degrees(math.atan2(to_camera.x, to_camera.z))
+
+        relative_angle = (self.rotation_y - camera_angle) % 360
+
+        if relative_angle < 22.5 or relative_angle >= 337.5:
+            return 1, False
+        elif relative_angle < 67.5:
+            return 2, False
+        elif relative_angle < 112.5:
+            return 3, False
+        elif relative_angle < 157.5:
+            return 4, False
+        elif relative_angle < 202.5:
+            return 5, False
+        elif relative_angle < 247.5:
+            return 4, True
+        elif relative_angle < 292.5:
+            return 3, True
+        else:
+            return 2, True
+
 
     def move_toward(self, target_position):
         self.look_at_2d(target_position)
