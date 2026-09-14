@@ -61,8 +61,17 @@ class WeaponBase(Entity):
         self.on_fire_frame_changed(0)
 
     def update(self):
+        if self.player and self.player.health <= 0:
+            self.ammo = 0
+            if self.sprite:
+                self.sprite.enabled = False
+            return
+
         if self.sprite and self.base_position is None:
             self.base_position = self.sprite.position
+
+        if self.sprite:
+            self.sprite.enabled = True
 
         if self.firing:
             self.fire_frame_timer += time.dt

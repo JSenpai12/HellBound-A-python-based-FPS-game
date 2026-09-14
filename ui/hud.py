@@ -1,4 +1,4 @@
-from ursina import Entity, Text, camera, color
+from ursina import Entity, Text, camera, color, time
 
 
 class HUD(Entity):
@@ -29,6 +29,7 @@ class HUD(Entity):
             position=(-0.3, 0),
             scale=3,
             color=color.red,
+            z=-0.1,
         )
 
         self.win_text = Text(
@@ -46,15 +47,28 @@ class HUD(Entity):
             color=color.yellow,
         )
 
+        self.death_screen = Entity(
+            parent=self,
+            model='quad',
+            texture='assets/textures/ui/death_screen_ui.png',
+            color=color.white,
+            scale=(2, 1.13),
+            z=0.5,
+            enabled=False,
+        )
+
     def update(self):
+        is_dead = self.player.health <= 0
+
+        self.health_text.enabled = not is_dead
+        self.ammo_text.enabled = not is_dead
+        self.stamina_text.enabled = not is_dead
+
         self.health_text.text = f'HP: {max(self.player.health, 0)}'
         self.ammo_text.text = f'AMMO: {self.weapon.ammo}'
         self.stamina_text.text = f'STAMINA: {int(self.player.stamina)}'
 
-        if self.player.health <= 0:
-            self.game_over_text.text = 'GAME OVER - Press R to Restart'
-        else:
-            self.game_over_text.text = ''
+        self.death_screen.enabled = is_dead
 
         if getattr(self.player, 'won', False):
             self.win_text.text = 'LEVEL COMPLETE! Press R to Restart'
