@@ -21,7 +21,11 @@ hud = None
 active_pickups = []
 AMMO_DROP_CHANCE = 0.35
 HEALTH_DROP_CHANCE = 0.20
-
+pending_next_level = None
+pending_next_exit_position = None
+pending_next_is_final = False
+pending_enemy_level_path = None
+pending_enemy_count = 0
 
 def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
     global current_level_entities, exit_trigger, active_pickups
@@ -38,17 +42,21 @@ def load_new_level(path, exit_position=None, next_level_path=None, is_final=Fals
     entities, start_pos = load_level(path)
     current_level_entities = entities
     player.position = start_pos
+
     if exit_position and is_final:
         exit_trigger = ExitTrigger(
-            on_trigger=lambda: win_game(),
+            on_trigger=lambda: complete_stage(next_level_path=None),
             player=player,
             position=exit_position
         )
     elif exit_position and next_level_path:
         exit_trigger = ExitTrigger(
-            on_trigger=lambda: (
-                load_new_level(next_level_path, exit_position=(144, 1, 56), is_final=True),
-                spawn_enemies(get_random_open_positions('levels/level_data/e1m2.json', count=25))
+            on_trigger=lambda: complete_stage(
+                next_level_path=next_level_path,
+                next_exit_position=(144, 1, 56),
+                next_is_final=True,
+                enemy_level_path=next_level_path,
+                enemy_count=6
             ),
             player=player,
             position=exit_position
@@ -80,14 +88,37 @@ def handle_enemy_death(position):
         active_pickups.append(pickup)
 
 
-def win_game():
-    player.won = True
+def complete_stage(next_level_path=None, next_exit_position=None, next_is_final=False, enemy_level_path=None, enemy_count=0):
+    global pending_next_level, pending_next_exit_position, pending_next_is_final
+    global pending_enemy_level_path, pending_enemy_count
+
+    player.stage_cleared = True
+    player.has_next_level = next_level_path is not None
     player.enabled = False
 
+    pending_next_level = next_level_path
+    pending_next_exit_position = next_exit_position
+    pending_next_is_final = next_is_final
+    pending_enemy_level_path = enemy_level_path
+    pending_enemy_count = enemy_count
+
+def advance_to_next_stage():
+    player.stage_cleared = False
+    player.has_next_level = False
+    player.enabled = True
+
+    load_new_level(
+        pending_next_level,
+        exit_position=pending_next_exit_position,
+        is_final=pending_next_is_final
+    )
+    spawn_enemies(get_random_open_positions(pending_enemy_level_path, count=pending_enemy_count))
 
 def restart_game():
     player.health = player.max_health
     player.won = False
+    player.stage_cleared = False
+    player.has_next_level = False
     player.enabled = True
     load_new_level(
         'levels/level_data/e1m1.json',
@@ -123,11 +154,19 @@ def input(key):
     if weapon is None:
         return
     if key == 'left mouse down':
-        weapon.fire()
+        if player.health > 0 and not player.stage_cleared:
+            weapon.fire()
     if key == 'r':
-        if player.health <= 0 or player.won:
+        if player.health <= 0:
             weapon.ammo = 15
             restart_game()
+    if key == 'space':
+        if player.stage_cleared:
+            if player.has_next_level:
+                weapon.sprite.enabled = False
+                advance_to_next_stage()
+            else:
+                restart_game()
     if key == 'shift':
         player.start_sprint()
     if key == 'shift up':

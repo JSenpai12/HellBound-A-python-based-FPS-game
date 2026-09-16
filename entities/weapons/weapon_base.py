@@ -61,8 +61,7 @@ class WeaponBase(Entity):
         self.on_fire_frame_changed(0)
 
     def update(self):
-        if self.player and self.player.health <= 0:
-            self.ammo = 0
+        if self.player and (self.player.health <= 0 or self.player.stage_cleared):
             if self.sprite:
                 self.sprite.enabled = False
             return

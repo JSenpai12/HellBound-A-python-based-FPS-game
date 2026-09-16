@@ -56,21 +56,35 @@ class HUD(Entity):
             z=0.5,
             enabled=False,
         )
+        self.stage_clear_screen = Entity(
+            parent=self,
+            model='quad',
+            texture='assets/textures/ui/Stage_Clear.png',
+            color=color.white,
+            scale=(2, 1.13),
+            z=0.5,
+            enabled=False,
+        )
 
     def update(self):
         is_dead = self.player.health <= 0
+        stage_cleared = self.player.stage_cleared
 
-        self.health_text.enabled = not is_dead
-        self.ammo_text.enabled = not is_dead
-        self.stamina_text.enabled = not is_dead
+        self.health_text.enabled = not is_dead and not stage_cleared
+        self.ammo_text.enabled = not is_dead and not stage_cleared
+        self.stamina_text.enabled = not is_dead and not stage_cleared
 
         self.health_text.text = f'HP: {max(self.player.health, 0)}'
         self.ammo_text.text = f'AMMO: {self.weapon.ammo}'
         self.stamina_text.text = f'STAMINA: {int(self.player.stamina)}'
 
         self.death_screen.enabled = is_dead
+        self.stage_clear_screen.enabled = stage_cleared
 
-        if getattr(self.player, 'won', False):
-            self.win_text.text = 'LEVEL COMPLETE! Press R to Restart'
+        if stage_cleared:
+            if self.player.has_next_level:
+                self.win_text.text = ''
+            else:
+                self.win_text.text = ''
         else:
             self.win_text.text = ''

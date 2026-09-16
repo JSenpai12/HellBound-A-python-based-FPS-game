@@ -20,8 +20,11 @@ class Player(FirstPersonController):
         self.base_speed = self.speed
         self.sprint_multiplier = 1.6
 
+        self.stage_cleared = False
+        self.has_next_level = False
+
     def take_damage(self, amount):
-        if self.health <= 0:
+        if self.health <= 0 or self.stage_cleared:
             return
         self.health -= amount
         print(f"Player took {amount} damage, health now {self.health}")
