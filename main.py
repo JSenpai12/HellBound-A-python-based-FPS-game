@@ -27,9 +27,9 @@ pending_next_is_final = False
 pending_enemy_level_path = None
 pending_enemy_count = 0
 
+
 def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
     global current_level_entities, exit_trigger, active_pickups
-
 
     for e in current_level_entities:
         destroy(e)
@@ -74,6 +74,7 @@ def spawn_enemies(positions):
         enemy.on_death = handle_enemy_death
         current_enemies.append(enemy)
 
+
 def handle_enemy_death(position):
     global active_pickups
 
@@ -102,6 +103,7 @@ def complete_stage(next_level_path=None, next_exit_position=None, next_is_final=
     pending_enemy_level_path = enemy_level_path
     pending_enemy_count = enemy_count
 
+
 def advance_to_next_stage():
     player.stage_cleared = False
     player.has_next_level = False
@@ -113,6 +115,7 @@ def advance_to_next_stage():
         is_final=pending_next_is_final
     )
     spawn_enemies(get_random_open_positions(pending_enemy_level_path, count=pending_enemy_count))
+
 
 def restart_game():
     player.health = player.max_health
@@ -126,6 +129,42 @@ def restart_game():
         next_level_path='levels/level_data/e1m2.json'
     )
     spawn_enemies(get_random_open_positions('levels/level_data/e1m1.json', count=15))
+
+
+def return_to_menu():
+    global current_level_entities, exit_trigger, current_enemies, active_pickups
+    global player, weapon, hud
+
+    for e in current_level_entities:
+        destroy(e)
+    current_level_entities = []
+
+    for e in current_enemies:
+        destroy(e)
+    current_enemies = []
+
+    for p in active_pickups:
+        destroy(p)
+    active_pickups = []
+
+    if exit_trigger:
+        destroy(exit_trigger)
+        exit_trigger = None
+
+    if hud:
+        destroy(hud)
+        hud = None
+
+    if weapon:
+        destroy(weapon)
+        weapon = None
+
+    if player:
+        destroy(player)
+        player = None
+
+    mouse.locked = False
+    menu.enabled = True
 
 
 def start_game():
@@ -163,15 +202,13 @@ def input(key):
     if key == 'space':
         if player.stage_cleared:
             if player.has_next_level:
-                weapon.sprite.enabled = False
                 advance_to_next_stage()
             else:
-                restart_game()
+                return_to_menu()
     if key == 'shift':
         player.start_sprint()
     if key == 'shift up':
         player.stop_sprint()
-
 
 
 app.run()

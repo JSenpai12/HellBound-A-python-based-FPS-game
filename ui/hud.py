@@ -65,10 +65,23 @@ class HUD(Entity):
             z=0.5,
             enabled=False,
         )
+        self.game_complete_screen = Entity(
+        parent=self,
+        model='quad',
+        texture='assets/textures/ui/Area_Secured.png',
+        color=color.white,
+        scale=(2, 1.13),
+        z=0.5,
+        enabled=False,
+        )
 
     def update(self):
         is_dead = self.player.health <= 0
         stage_cleared = self.player.stage_cleared
+        has_next = self.player.has_next_level
+
+        self.stage_clear_screen.enabled = stage_cleared and has_next
+        self.game_complete_screen.enabled = stage_cleared and not has_next
 
         self.health_text.enabled = not is_dead and not stage_cleared
         self.ammo_text.enabled = not is_dead and not stage_cleared
@@ -79,12 +92,4 @@ class HUD(Entity):
         self.stamina_text.text = f'STAMINA: {int(self.player.stamina)}'
 
         self.death_screen.enabled = is_dead
-        self.stage_clear_screen.enabled = stage_cleared
 
-        if stage_cleared:
-            if self.player.has_next_level:
-                self.win_text.text = ''
-            else:
-                self.win_text.text = ''
-        else:
-            self.win_text.text = ''
