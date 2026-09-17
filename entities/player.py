@@ -1,5 +1,6 @@
 from ursina.prefabs.first_person_controller import FirstPersonController
-from ursina import time
+from ursina import time, held_keys
+
 
 class Player(FirstPersonController):
     def __init__(self, health=100, **kwargs):
@@ -16,6 +17,7 @@ class Player(FirstPersonController):
         self.stamina_regen_delay = 1.0
         self.stamina_regen_timer = 0
         self.sprinting = False
+        self.sprint_requested = False
 
         self.base_speed = self.speed
         self.sprint_multiplier = 1.6
@@ -35,8 +37,18 @@ class Player(FirstPersonController):
         print("Player died")
         self.enabled = False
 
+    def is_moving_input(self):
+        return held_keys['w'] or held_keys['a'] or held_keys['s'] or held_keys['d']
+
     def update(self):
         super().update()
+
+        if self.sprint_requested and self.is_moving_input() and self.stamina > 0:
+            self.sprinting = True
+            self.speed = self.base_speed * self.sprint_multiplier
+        elif self.sprinting and not self.is_moving_input():
+            self.sprinting = False
+            self.speed = self.base_speed
 
         if self.sprinting and self.stamina > 0:
             self.stamina -= time.dt * self.stamina_drain_rate
@@ -52,10 +64,12 @@ class Player(FirstPersonController):
                 self.stamina = min(self.max_stamina, self.stamina + time.dt * self.stamina_regen_rate)
 
     def start_sprint(self):
-        if self.stamina > 0:
+        self.sprint_requested = True
+        if self.is_moving_input() and self.stamina > 0:
             self.sprinting = True
             self.speed = self.base_speed * self.sprint_multiplier
 
     def stop_sprint(self):
+        self.sprint_requested = False
         self.sprinting = False
         self.speed = self.base_speed
