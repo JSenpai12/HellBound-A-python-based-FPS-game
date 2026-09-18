@@ -1,5 +1,6 @@
 import math
 from ursina import Entity, camera, mouse, raycast, distance, time, held_keys, Vec2
+from entities.projectiles import BulletProjectile
 
 
 class WeaponBase(Entity):
@@ -43,13 +44,19 @@ class WeaponBase(Entity):
             distance=self.range,
             ignore=[camera]
         )
+
         if hit_info.hit:
+            end_pos = hit_info.world_point
             if hasattr(hit_info.entity, 'take_damage'):
                 hit_info.entity.take_damage(self.damage)
             else:
                 print(f"Hit {hit_info.entity}, but it can't take damage")
         else:
+            end_pos = camera.world_position + camera.forward * self.range
             print("Missed")
+
+        start_pos = camera.world_position + camera.forward * 1
+        BulletProjectile(start_pos=start_pos, end_pos=end_pos)
 
     def start_fire_animation(self):
         if not self.fire_frames or self.sprite is None:
