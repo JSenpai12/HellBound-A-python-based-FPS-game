@@ -2,10 +2,10 @@ from ursina import Entity, color, destroy, curve
 
 
 class BulletProjectile(Entity):
-    def __init__(self, start_pos, end_pos, travel_time=0.08, **kwargs):
+    def __init__(self, start_pos, end_pos, travel_time=0.25, **kwargs):
         super().__init__(
             model='sphere',
-            color=color.yellow,
+            color=color.red,
             scale=0.05,
             position=start_pos,
             **kwargs

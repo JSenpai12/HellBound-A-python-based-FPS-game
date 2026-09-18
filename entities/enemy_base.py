@@ -51,7 +51,7 @@ class EnemyBase(Entity):
         self.on_death = None
 
     def take_damage(self, amount):
-        if self.dying:
+        if self.dying or self.health <= 0:
             return
         self.health -= amount
         print(f"{self} took {amount} damage, health now {self.health}")
