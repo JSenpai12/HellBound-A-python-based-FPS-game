@@ -39,6 +39,8 @@ class Pistol(WeaponBase):
         # which fire_frames index(es) should show the flash
         self.flash_frame_indices = {0}   # flash shows on the first fire frame, like Doom's muzzle-flash state
 
+        self.projectile_texture = load_texture('assets/textures/sprites/effects/PUFFA0.png')
+
     def on_fire_frame_changed(self, index):
         if index in self.flash_frame_indices:
             self.flash_sprite.visible = True

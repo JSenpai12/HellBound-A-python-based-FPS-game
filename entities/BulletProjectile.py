@@ -1,8 +1,8 @@
-from ursina import Entity, color, destroy, curve, load_texture, time, invoke
+from ursina import Entity, color, destroy, curve, load_texture, time, billboard, invoke
 
 
 class BulletProjectile(Entity):
-    def __init__(self, start_pos, end_pos, travel_time=0.35, texture=None, **kwargs):
+    def __init__(self, start_pos, end_pos, travel_time=0.08, texture=None, **kwargs):
         super().__init__(
             model='quad',
             billboard=True,
@@ -33,8 +33,6 @@ class ImpactEffect(Entity):
             position=position,
             **kwargs
         )
-        print(f"ImpactEffect spawned at {position}")
-
         if ImpactEffect.frames is None:
             ImpactEffect.frames = [
                 load_texture('assets/textures/sprites/effects/PUFFA0.png'),

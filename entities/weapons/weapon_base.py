@@ -30,6 +30,8 @@ class WeaponBase(Entity):
         self.bob_amount = 0.015
         self.base_position = None
 
+        self.projectile_texture = None
+
     def fire(self):
         if self.ammo <= 0:
             print("Out of ammo")
@@ -45,18 +47,26 @@ class WeaponBase(Entity):
             ignore=[camera]
         )
 
+        travel_time = 0.08
+
         if hit_info.hit:
-            end_pos = hit_info.world_point
-            if hasattr(hit_info.entity, 'take_damage'):
-                hit_info.entity.take_damage(self.damage)
+            end_pos = hit_info.world_point - camera.forward * 0.3
+            target_entity = hit_info.entity
+
+            if hasattr(target_entity, 'take_damage'):
+                invoke(target_entity.take_damage, self.damage, delay=travel_time)
             else:
-                print(f"Hit {hit_info.entity}, but it can't take damage")
+                print(f"Hit {target_entity}, but it can't take damage")
         else:
             end_pos = camera.world_position + camera.forward * self.range
-            print("Missed")
 
         start_pos = camera.world_position + camera.forward * 1
-        BulletProjectile(start_pos=start_pos, end_pos=end_pos)
+        BulletProjectile(
+            start_pos=start_pos,
+            end_pos=end_pos,
+            travel_time=travel_time,
+            texture=self.projectile_texture
+        )
 
     def start_fire_animation(self):
         if not self.fire_frames or self.sprite is None:
@@ -97,7 +107,7 @@ class WeaponBase(Entity):
         self.apply_bob()
 
     def apply_bob(self):
-        if self.base_position is None or self.player is None:
+        if self.base_position is None or self.player is None or not self.sprite:
             return
 
         is_moving = held_keys['w'] or held_keys['a'] or held_keys['s'] or held_keys['d']
