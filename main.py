@@ -166,6 +166,20 @@ def jump_to_level(index):
     load_current_level()
     print(f"Jumped to level {index + 1}: {LEVELS[index]['path']}")
 
+def teleport_to_exit():
+    level = LEVELS[current_level_index]
+    exit_pos = level.get('exit_position')
+
+    if exit_pos is None:
+        print(f"Level {current_level_index + 1} has no exit position set")
+        return
+
+    offset_distance = 6
+    ex, ey, ez = exit_pos
+    player.position = (ex - offset_distance, ey, ez)
+    print(f"Teleported near exit at {player.position} (exit itself at {exit_pos})")
+
+
 def return_to_menu():
     global current_level_entities, exit_trigger, current_enemies, active_pickups
     global player, weapon, hud
@@ -243,6 +257,9 @@ def input(key):
 
     if key.isdigit():
         jump_to_level(int(key) - 1)
+
+    if key == 'e':
+        teleport_to_exit()
 
 
 app.run()
