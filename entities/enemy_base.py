@@ -62,13 +62,13 @@ class EnemyBase(Entity):
         print(f"{self} died")
         self.dying = True
         self.collider = None
-        if self.on_death:
-            self.on_death(self.position)
         if self.die_frames:
             self.die_frame_index = 0
             self.die_frame_timer = 0
             self.sprite.texture = self.die_frames[0]
         else:
+            if self.on_death:
+                self.on_death(self.position)
             destroy(self)
 
     def update(self):
@@ -213,6 +213,8 @@ class EnemyBase(Entity):
             self.die_frame_timer = 0
             self.die_frame_index += 1
             if self.die_frame_index >= len(self.die_frames):
+                if self.on_death:
+                    self.on_death(self.position)
                 destroy(self)
                 return
             self.sprite.texture = self.die_frames[self.die_frame_index]

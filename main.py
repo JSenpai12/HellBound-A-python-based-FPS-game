@@ -12,6 +12,45 @@ from entities.pickups.health import HealthPickup
 
 app = Ursina()
 
+LEVELS = [
+    {
+        'path': 'levels/level_data/e1m1.json',
+        'exit_position': (120, 1, 44),
+        'mode': 'exit',
+        'enemy_count': 15,
+    },
+    {
+        'path': 'levels/level_data/e1m2.json',
+        'exit_position': (144, 1, 56),
+        'mode': 'exit',
+        'enemy_count': 30,
+    },
+    {
+        'path': 'levels/level_data/e1m3.json',
+        'exit_position': (32, 1, 28),
+        'mode': 'exit',
+        'enemy_count': 0,
+    },
+    {
+        'path': 'levels/level_data/e1m4.json',
+        'exit_position': (28, 1, 44),
+        'mode': 'exit',
+        'enemy_count': 0,
+    },
+    {
+        'path': 'levels/level_data/e1m5.json',
+        'exit_position': (144, 1, 60),
+        'mode': 'exit',
+        'enemy_count': 0,
+    },
+    {
+        'path': 'levels/level_data/e1m52.json',
+        'mode': 'exit',
+        'exit_position': None,
+        'enemy_count': 0,
+    },
+]
+
 current_level_entities = []
 exit_trigger = None
 current_enemies = []
@@ -21,15 +60,15 @@ hud = None
 active_pickups = []
 AMMO_DROP_CHANCE = 0.35
 HEALTH_DROP_CHANCE = 0.20
-pending_next_level = None
-pending_next_exit_position = None
-pending_next_is_final = False
-pending_enemy_level_path = None
-pending_enemy_count = 0
+
+current_level_index = 0
 
 
-def load_new_level(path, exit_position=None, next_level_path=None, is_final=False):
+def load_current_level():
     global current_level_entities, exit_trigger, active_pickups
+
+    level = LEVELS[current_level_index]
+    is_last = current_level_index == len(LEVELS) - 1
 
     for e in current_level_entities:
         destroy(e)
@@ -39,28 +78,22 @@ def load_new_level(path, exit_position=None, next_level_path=None, is_final=Fals
     if exit_trigger:
         destroy(exit_trigger)
         exit_trigger = None
-    entities, start_pos = load_level(path)
+
+    entities, start_pos = load_level(level['path'])
     current_level_entities = entities
     player.position = start_pos
 
-    if exit_position and is_final:
+    if not is_last and level.get('exit_position'):
         exit_trigger = ExitTrigger(
-            on_trigger=lambda: complete_stage(next_level_path=None),
+            on_trigger=lambda: complete_stage(),
             player=player,
-            position=exit_position
+            position=level['exit_position']
         )
-    elif exit_position and next_level_path:
-        exit_trigger = ExitTrigger(
-            on_trigger=lambda: complete_stage(
-                next_level_path=next_level_path,
-                next_exit_position=(144, 1, 56),
-                next_is_final=True,
-                enemy_level_path=next_level_path,
-                enemy_count=6
-            ),
-            player=player,
-            position=exit_position
-        )
+
+    if level['enemy_count'] > 0:
+        spawn_enemies(get_random_open_positions(level['path'], count=level['enemy_count']))
+    else:
+        spawn_enemies([])
 
 
 def spawn_enemies(positions):
@@ -89,47 +122,49 @@ def handle_enemy_death(position):
         active_pickups.append(pickup)
 
 
-def complete_stage(next_level_path=None, next_exit_position=None, next_is_final=False, enemy_level_path=None, enemy_count=0):
-    global pending_next_level, pending_next_exit_position, pending_next_is_final
-    global pending_enemy_level_path, pending_enemy_count
-
+def complete_stage():
+    is_last = current_level_index == len(LEVELS) - 1
     player.stage_cleared = True
-    player.has_next_level = next_level_path is not None
+    player.has_next_level = not is_last
     player.enabled = False
-
-    pending_next_level = next_level_path
-    pending_next_exit_position = next_exit_position
-    pending_next_is_final = next_is_final
-    pending_enemy_level_path = enemy_level_path
-    pending_enemy_count = enemy_count
 
 
 def advance_to_next_stage():
+    global current_level_index
+
     player.stage_cleared = False
     player.has_next_level = False
     player.enabled = True
 
-    load_new_level(
-        pending_next_level,
-        exit_position=pending_next_exit_position,
-        is_final=pending_next_is_final
-    )
-    spawn_enemies(get_random_open_positions(pending_enemy_level_path, count=pending_enemy_count))
+    current_level_index += 1
+    load_current_level()
 
 
 def restart_game():
+    global current_level_index
+
+    current_level_index = 0
     player.health = player.max_health
     player.won = False
     player.stage_cleared = False
     player.has_next_level = False
     player.enabled = True
-    load_new_level(
-        'levels/level_data/e1m1.json',
-        exit_position=(120, 1, 44),
-        next_level_path='levels/level_data/e1m2.json'
-    )
-    spawn_enemies(get_random_open_positions('levels/level_data/e1m1.json', count=15))
+    load_current_level()
 
+def jump_to_level(index):
+    global current_level_index
+
+    if index < 0 or index >= len(LEVELS):
+        print(f"No level at index {index + 1} (valid range: 1-{len(LEVELS)})")
+        return
+
+    current_level_index = index
+    player.health = player.max_health
+    player.stage_cleared = False
+    player.has_next_level = False
+    player.enabled = True
+    load_current_level()
+    print(f"Jumped to level {index + 1}: {LEVELS[index]['path']}")
 
 def return_to_menu():
     global current_level_entities, exit_trigger, current_enemies, active_pickups
@@ -168,19 +203,15 @@ def return_to_menu():
 
 
 def start_game():
-    global player, weapon, hud
+    global player, weapon, hud, current_level_index
 
+    current_level_index = 0
     player = Player()
     player.gravity = 0.5
     weapon = Pistol(player=player)
     hud = HUD(player, weapon)
 
-    load_new_level(
-        'levels/level_data/e1m1.json',
-        exit_position=(120, 1, 44),
-        next_level_path='levels/level_data/e1m2.json'
-    )
-    spawn_enemies(get_random_open_positions('levels/level_data/e1m1.json', count=15))
+    load_current_level()
 
     mouse.locked = True
 
@@ -209,6 +240,9 @@ def input(key):
         player.start_sprint()
     if key == 'shift up':
         player.stop_sprint()
+
+    if key.isdigit():
+        jump_to_level(int(key) - 1)
 
 
 app.run()
