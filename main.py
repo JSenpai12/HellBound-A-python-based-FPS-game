@@ -2,6 +2,7 @@ from ursina import *
 from levels.level_loader import load_level, get_random_open_positions
 from entities.weapons.pistol import Pistol
 from entities.enemies.imp import Imp
+from entities.enemies.demon import Demon
 from entities.player import Player
 from ui.hud import HUD
 from levels.levels_objects import ExitTrigger
@@ -29,13 +30,15 @@ LEVELS = [
         'path': 'levels/level_data/e1m3.json',
         'exit_position': (32, 1, 28),
         'mode': 'exit',
-        'enemy_count': 0,
+        'enemy_count': 30,
+        'enemy_classes': [Imp, Demon],
     },
     {
         'path': 'levels/level_data/e1m4.json',
         'exit_position': (28, 1, 44),
         'mode': 'exit',
-        'enemy_count': 0,
+        'enemy_count': 40,
+        'enemy_classes': [Imp, Demon],
     },
     {
         'path': 'levels/level_data/e1m5.json',
@@ -91,18 +94,24 @@ def load_current_level():
         )
 
     if level['enemy_count'] > 0:
-        spawn_enemies(get_random_open_positions(level['path'], count=level['enemy_count']))
+        enemy_classes = level.get('enemy_classes', [Imp])
+        spawn_enemies(get_random_open_positions(level['path'], count=level['enemy_count']), enemy_classes=enemy_classes)
     else:
         spawn_enemies([])
 
-
-def spawn_enemies(positions):
+def spawn_enemies(positions, enemy_classes=None):
     global current_enemies
+
+    if enemy_classes is None:
+        enemy_classes = [Imp]
+
     for e in current_enemies:
         destroy(e)
     current_enemies = []
+
     for pos in positions:
-        enemy = Imp(position=pos)
+        enemy_class = random.choice(enemy_classes)
+        enemy = enemy_class(position=pos)
         enemy.target = player
         enemy.on_death = handle_enemy_death
         current_enemies.append(enemy)
