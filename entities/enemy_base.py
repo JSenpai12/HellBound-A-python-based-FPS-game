@@ -23,6 +23,13 @@ class EnemyBase(Entity):
         self.frame_timer = 0
         self.is_moving = False
 
+        # Pain/stagger attributes
+        self.in_pain = False
+        self.pain_duration = 0.3
+        self.pain_timer = 0
+        self.pain_slow_multiplier = 0.3
+        self.pain_chance = 0.5
+
         #Dying Frame Attributes
         self.die_frames = []
         self.dying = False
@@ -57,6 +64,12 @@ class EnemyBase(Entity):
         print(f"{self} took {amount} damage, health now {self.health}")
         if self.health <= 0:
             self.die()
+        elif random.random() < self.pain_chance:
+            self.trigger_pain()
+
+    def trigger_pain(self):
+        self.in_pain = True
+        self.pain_timer = 0
 
     def die(self):
         print(f"{self} died")
@@ -78,6 +91,11 @@ class EnemyBase(Entity):
 
         if self.health <= 0:
             return
+
+        if self.in_pain:
+            self.pain_timer += time.dt
+            if self.pain_timer >= self.pain_duration:
+                self.in_pain = False
 
         self.animate_sprite()
 
@@ -117,7 +135,7 @@ class EnemyBase(Entity):
         if not self.walk_rotation_frames or not self.walk_pose_order:
             return
 
-        if self.is_moving:
+        if self.is_moving and not self.in_pain:
             self.frame_timer += time.dt
             if self.frame_timer >= self.frame_duration:
                 self.frame_timer = 0
@@ -159,7 +177,8 @@ class EnemyBase(Entity):
     def move_toward(self, target_position):
         self.look_at_2d(target_position)
         move_direction = self.forward
-        move_distance = time.dt * self.speed
+        speed = self.speed * self.pain_slow_multiplier if self.in_pain else self.speed
+        move_distance = time.dt * speed
 
         hit_info = raycast(
             origin=self.position + (0, 0.5, 0),
