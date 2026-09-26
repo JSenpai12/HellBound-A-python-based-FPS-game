@@ -1,56 +1,60 @@
-from ursina import *
-from levels.level_loader import load_level, get_random_open_positions
-from entities.weapons.pistol import Pistol
-from entities.enemies.imp import Imp
-from entities.enemies.demon import Demon
-from entities.player import Player
-from ui.hud import HUD
-from levels.levels_objects import ExitTrigger
-from ui.main_menu import MainMenu
 import random
+
+from ursina import *
+
+from entities.enemies.demon import Demon
+from entities.enemies.imp import Imp
 from entities.pickups.ammo import AmmoPickup
 from entities.pickups.health import HealthPickup
+from entities.player import Player
+from entities.weapons.pistol import Pistol
+from levels.level_loader import get_random_open_positions, load_level
+from levels.levels_objects import ExitTrigger
+from ui.hud import HUD
+from ui.main_menu import MainMenu
+from entities.enemies.mini_boss import MiniBoss
 
 app = Ursina()
 
 LEVELS = [
     {
-        'path': 'levels/level_data/e1m1.json',
-        'exit_position': (120, 1, 44),
-        'mode': 'exit',
-        'enemy_count': 15,
+        "path": "levels/level_data/e1m1.json",
+        "exit_position": (120, 1, 44),
+        "mode": "exit",
+        "enemy_count": 15,
     },
     {
-        'path': 'levels/level_data/e1m2.json',
-        'exit_position': (144, 1, 56),
-        'mode': 'exit',
-        'enemy_count': 30,
+        "path": "levels/level_data/e1m2.json",
+        "exit_position": (144, 1, 56),
+        "mode": "exit",
+        "enemy_count": 30,
     },
     {
-        'path': 'levels/level_data/e1m3.json',
-        'exit_position': (32, 1, 28),
-        'mode': 'exit',
-        'enemy_count': 30,
-        'enemy_classes': [Imp, Demon],
+        "path": "levels/level_data/e1m3.json",
+        "exit_position": (32, 1, 28),
+        "mode": "exit",
+        "enemy_count": 30,
+        "enemy_classes": [Imp, Demon],
     },
     {
-        'path': 'levels/level_data/e1m4.json',
-        'exit_position': (28, 1, 44),
-        'mode': 'exit',
-        'enemy_count': 40,
-        'enemy_classes': [Imp, Demon],
+        "path": "levels/level_data/e1m4.json",
+        "exit_position": (28, 1, 44),
+        "mode": "exit",
+        "enemy_count": 40,
+        "enemy_classes": [Imp, Demon],
     },
     {
-        'path': 'levels/level_data/e1m5.json',
-        'exit_position': (144, 1, 60),
-        'mode': 'exit',
-        'enemy_count': 0,
+        "path": "levels/level_data/e1m5.json",
+        "exit_position": (144, 1, 60),
+        "mode": "exit",
+        "enemy_count": 1,
+        "enemy_classes": [MiniBoss],
     },
     {
-        'path': 'levels/level_data/e1m52.json',
-        'mode': 'exit',
-        'exit_position': None,
-        'enemy_count': 0,
+        "path": "levels/level_data/e1m52.json",
+        "mode": "exit",
+        "exit_position": None,
+        "enemy_count": 0,
     },
 ]
 
@@ -82,22 +86,26 @@ def load_current_level():
         destroy(exit_trigger)
         exit_trigger = None
 
-    entities, start_pos = load_level(level['path'])
+    entities, start_pos = load_level(level["path"])
     current_level_entities = entities
     player.position = start_pos
 
-    if not is_last and level.get('exit_position'):
+    if not is_last and level.get("exit_position"):
         exit_trigger = ExitTrigger(
             on_trigger=lambda: complete_stage(),
             player=player,
-            position=level['exit_position']
+            position=level["exit_position"],
         )
 
-    if level['enemy_count'] > 0:
-        enemy_classes = level.get('enemy_classes', [Imp])
-        spawn_enemies(get_random_open_positions(level['path'], count=level['enemy_count']), enemy_classes=enemy_classes)
+    if level["enemy_count"] > 0:
+        enemy_classes = level.get("enemy_classes", [Imp])
+        spawn_enemies(
+            get_random_open_positions(level["path"], count=level["enemy_count"]),
+            enemy_classes=enemy_classes,
+        )
     else:
         spawn_enemies([])
+
 
 def spawn_enemies(positions, enemy_classes=None):
     global current_enemies
@@ -118,7 +126,6 @@ def spawn_enemies(positions, enemy_classes=None):
 
 
 def handle_enemy_death(position):
-    global active_pickups
 
     roll = random.random()
     if roll < AMMO_DROP_CHANCE:
@@ -160,6 +167,7 @@ def restart_game():
     player.enabled = True
     load_current_level()
 
+
 def jump_to_level(index):
     global current_level_index
 
@@ -175,9 +183,10 @@ def jump_to_level(index):
     load_current_level()
     print(f"Jumped to level {index + 1}: {LEVELS[index]['path']}")
 
+
 def teleport_to_exit():
     level = LEVELS[current_level_index]
-    exit_pos = level.get('exit_position')
+    exit_pos = level.get("exit_position")
 
     if exit_pos is None:
         print(f"Level {current_level_index + 1} has no exit position set")
@@ -246,28 +255,28 @@ mouse.locked = False
 def input(key):
     if weapon is None:
         return
-    if key == 'left mouse down':
+    if key == "left mouse down":
         if player.health > 0 and not player.stage_cleared:
             weapon.fire()
-    if key == 'r':
+    if key == "r":
         if player.health <= 0:
             weapon.ammo = 15
             restart_game()
-    if key == 'space':
+    if key == "space":
         if player.stage_cleared:
             if player.has_next_level:
                 advance_to_next_stage()
             else:
                 return_to_menu()
-    if key == 'shift':
+    if key == "shift":
         player.start_sprint()
-    if key == 'shift up':
+    if key == "shift up":
         player.stop_sprint()
 
     if key.isdigit():
         jump_to_level(int(key) - 1)
 
-    if key == 'e':
+    if key == "e":
         teleport_to_exit()
 
 
