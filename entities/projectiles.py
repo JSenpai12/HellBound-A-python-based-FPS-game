@@ -1,5 +1,4 @@
-from ursina import Entity, color, destroy, curve, load_texture, time, invoke, raycast, distance, Vec3
-
+from ursina import Entity, color, destroy, curve, load_texture, time, invoke, raycast, distance, Vec3, scene
 
 class BulletProjectile(Entity):
     def __init__(self, start_pos, end_pos, travel_time=0.35, texture=None, **kwargs):
@@ -64,7 +63,7 @@ class FireballProjectile(Entity):
     PLAYER_EYE_HEIGHT = 1.6  # tune to match your actual player's eye/camera height
     SPLASH_RADIUS = 1.2      # how close the target must be to the explosion point to take damage
 
-    def __init__(self, start_pos, target, travel_time=0.6, damage=15, **kwargs):
+    def __init__(self, start_pos, target, shooter=None, travel_time=1.6, damage=15, **kwargs):
         super().__init__(
             model='quad',
             billboard=True,
@@ -117,6 +116,12 @@ class FireballProjectile(Entity):
             ignore_list = [self]
             if target:
                 ignore_list.append(target)
+            if shooter:
+                ignore_list.append(shooter)
+            # Let fireballs fly past other enemies (e.g. the second Baron on e1m5)
+            for e in scene.entities:
+                if e is not self and hasattr(e, 'take_damage'):
+                    ignore_list.append(e)
 
             hit_info = raycast(
                 origin=start_pos,

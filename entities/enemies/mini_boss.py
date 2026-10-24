@@ -7,7 +7,7 @@ class MiniBoss(EnemyBase):
     def __init__(self, position=(0, 1, 0)):
         super().__init__(health=300, position=position, scale=2.2)
 
-        self.speed = 1.5
+        self.speed = 2.5
         self.attack_range = 3.5       # still used to stop movement when close, no longer deals damage
         self.attack_speed = 2.0
         self.sight_range = 30
@@ -117,9 +117,11 @@ class MiniBoss(EnemyBase):
             self.sprite.texture_scale = (-1, 1) if flip else (1, 1)
 
     def fire_ranged_attack(self):
+        self.ranged_cooldown = self.ranged_cooldown_max
         FireballProjectile(
             start_pos=self.position + (0, 1.2, 0),
-            target=self.pending_target,
+            target=self.target,
+            shooter=self,
             travel_time=0.6,
             damage=self.ranged_damage,
         )
