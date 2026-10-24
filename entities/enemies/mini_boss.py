@@ -1,4 +1,4 @@
-from ursina import load_texture, distance, time
+from ursina import load_texture, distance, time, raycast, Vec3, scene
 from entities.enemy_base import EnemyBase
 from entities.projectiles import FireballProjectile
 
@@ -11,6 +11,7 @@ class MiniBoss(EnemyBase):
         self.attack_range = 3.5       # still used to stop movement when close, no longer deals damage
         self.attack_speed = 2.0
         self.sight_range = 30
+        self.hold_range = 10
         self.pain_chance = 0.15
 
         self.ranged_range = 14
@@ -125,3 +126,35 @@ class MiniBoss(EnemyBase):
             travel_time=0.6,
             damage=self.ranged_damage,
         )
+
+    def move_toward(self, target_position):
+        # Only hold position while chasing the player, never while roaming
+        if self.state == 'chase' and self.target and self.should_hold_position():
+            self.look_at_2d(self.target.position)
+            self.is_moving = False
+            return
+        super().move_toward(target_position)
+
+    def should_hold_position(self):
+        dist = distance(self.position, self.target.position)
+        if dist > self.hold_range:
+            return False
+
+        # Only stand still if there's a clear shot; otherwise keep closing in
+        origin = self.position + Vec3(0, 1.2, 0)
+        target_point = self.target.position + Vec3(0, 1.6, 0)
+        direction = (target_point - origin).normalized()
+
+        ignore_list = [self, self.sprite, self.target]
+        # Fireballs fly past other enemies, so they shouldn't block the shot either
+        for e in scene.entities:
+            if e is not self and hasattr(e, 'take_damage'):
+                ignore_list.append(e)
+
+        hit_info = raycast(
+            origin=origin,
+            direction=direction,
+            distance=dist,
+            ignore=ignore_list,
+        )
+        return not hit_info.hit
