@@ -13,6 +13,7 @@ from levels.levels_objects import ExitTrigger
 from ui.hud import HUD
 from ui.main_menu import MainMenu
 from entities.enemies.mini_boss import MiniBoss
+from ui.minimap import Minimap
 
 app = Ursina()
 
@@ -64,6 +65,7 @@ current_enemies = []
 player = None
 weapon = None
 hud = None
+minimap = None
 active_pickups = []
 AMMO_DROP_CHANCE = 0.35
 HEALTH_DROP_CHANCE = 0.20
@@ -89,6 +91,9 @@ def load_current_level():
     entities, start_pos = load_level(level["path"])
     current_level_entities = entities
     player.position = start_pos
+
+    if minimap:
+        minimap.load(level["path"], level.get("exit_position"))
 
     if not is_last and level.get("exit_position"):
         exit_trigger = ExitTrigger(
@@ -199,8 +204,7 @@ def teleport_to_exit():
 
 
 def return_to_menu():
-    global current_level_entities, exit_trigger, current_enemies, active_pickups
-    global player, weapon, hud
+    global current_level_entities, exit_trigger, current_enemies, active_pickups, player, weapon, hud, minimap
 
     for e in current_level_entities:
         destroy(e)
@@ -226,6 +230,10 @@ def return_to_menu():
         destroy(weapon)
         weapon = None
 
+    if minimap:
+        destroy(minimap)
+        minimap = None
+
     if player:
         destroy(player)
         player = None
@@ -235,13 +243,14 @@ def return_to_menu():
 
 
 def start_game():
-    global player, weapon, hud, current_level_index
+    global player, weapon, hud, minimap, current_level_index
 
     current_level_index = 0
     player = Player()
     player.gravity = 0.5
     weapon = Pistol(player=player)
     hud = HUD(player, weapon)
+    minimap = Minimap(player, get_enemies=lambda: current_enemies)
 
     load_current_level()
 

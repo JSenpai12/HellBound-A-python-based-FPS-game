@@ -1,6 +1,5 @@
 from ursina import Entity, Text, camera, color, time
 
-
 class HUD(Entity):
     def __init__(self, player, weapon, **kwargs):
         super().__init__(parent=camera.ui, **kwargs)
