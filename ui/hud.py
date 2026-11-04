@@ -73,6 +73,14 @@ class HUD(Entity):
         z=0.5,
         enabled=False,
         )
+        self.notice = ''
+        self.notice_text = Text(
+            parent=self,
+            text='',
+            position=(-0.2, -0.12),
+            scale=2,
+            color=color.yellow,
+        )
 
     def update(self):
         is_dead = self.player.health <= 0
@@ -87,7 +95,8 @@ class HUD(Entity):
         self.stamina_text.enabled = not is_dead and not stage_cleared
 
         self.health_text.text = f'HP: {max(self.player.health, 0)}'
-        self.ammo_text.text = f'AMMO: {self.weapon.ammo}'
+        self.ammo_text.text = f'{type(self.weapon).__name__.upper()}: {self.weapon.ammo}'
+        self.notice_text.text = self.notice if self.player.stage_cleared else ''
         self.stamina_text.text = f'STAMINA: {int(self.player.stamina)}'
 
         self.death_screen.enabled = is_dead

@@ -125,3 +125,14 @@ class WeaponBase(Entity):
     def on_fire_frame_changed(self, index):
         """Override in subclasses that need to react to frame changes (e.g. muzzle flash overlays)."""
         pass
+
+    def equip(self):
+        self.enabled = True
+
+    def unequip(self):
+        self.firing = False
+        self.fire_frame_timer = 0
+        if self.sprite and self.idle_texture:
+            self.sprite.texture = self.idle_texture
+        self.on_fire_frame_changed(None)
+        self.enabled = False

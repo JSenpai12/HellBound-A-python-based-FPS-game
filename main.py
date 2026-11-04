@@ -8,6 +8,7 @@ from entities.pickups.ammo import AmmoPickup
 from entities.pickups.health import HealthPickup
 from entities.player import Player
 from entities.weapons.pistol import Pistol
+from entities.weapons.shotgun import Shotgun
 from levels.level_loader import get_random_open_positions, load_level
 from levels.levels_objects import ExitTrigger
 from ui.hud import HUD
@@ -43,6 +44,7 @@ LEVELS = [
         "mode": "exit",
         "enemy_count": 40,
         "enemy_classes": [Imp, Demon],
+        "reward_weapon": Shotgun,
     },
     {
         "path": "levels/level_data/e1m5.json",
@@ -64,6 +66,7 @@ exit_trigger = None
 current_enemies = []
 player = None
 weapon = None
+owned_weapons = []
 hud = None
 minimap = None
 active_pickups = []
@@ -133,10 +136,17 @@ def spawn_enemies(positions, enemy_classes=None):
 def handle_enemy_death(position):
 
     roll = random.random()
+
     if roll < AMMO_DROP_CHANCE:
-        pickup = AmmoPickup(position=position, amount=12, weapon=weapon)
+        target_weapon = random.choice(owned_weapons)
+        pickup = AmmoPickup(
+            position=position,
+            amount=getattr(target_weapon, "pickup_ammo", 12),
+            weapon=target_weapon,
+        )
         pickup.set_player(player)
         active_pickups.append(pickup)
+
     elif roll < AMMO_DROP_CHANCE + HEALTH_DROP_CHANCE:
         pickup = HealthPickup(position=position, amount=25, player=player)
         pickup.set_player(player)
@@ -149,9 +159,16 @@ def complete_stage():
     player.has_next_level = not is_last
     player.enabled = False
 
+    reward = LEVELS[current_level_index].get("reward_weapon")
+    if reward and give_weapon(reward):
+        hud.notice = f"NEW WEAPON: {type(weapon).__name__.upper()}"
+
 
 def advance_to_next_stage():
     global current_level_index
+
+    reset_weapons()
+    hud.notice = ""
 
     player.stage_cleared = False
     player.has_next_level = False
@@ -172,6 +189,53 @@ def restart_game():
     player.enabled = True
     load_current_level()
 
+def equip_weapon(index):
+    global weapon
+    if index < 0 or index >= len(owned_weapons):
+        return
+    if owned_weapons[index] is weapon:
+        return
+    weapon.unequip()
+    weapon = owned_weapons[index]
+    weapon.equip()
+    hud.weapon = weapon
+
+
+def give_weapon(weapon_class):
+    if any(isinstance(w, weapon_class) for w in owned_weapons):
+        return False
+    owned_weapons.append(weapon_class(player=player))
+    equip_weapon(len(owned_weapons) - 1)
+    return True
+
+
+def cycle_weapon(step):
+    if len(owned_weapons) < 2:
+        return
+    if player.health <= 0 or player.stage_cleared:
+        return
+    equip_weapon((owned_weapons.index(weapon) + step) % len(owned_weapons))
+
+
+def reset_weapons():
+    global weapon, owned_weapons
+    pistol = owned_weapons[0]
+    for w in owned_weapons[1:]:
+        destroy(w)
+    owned_weapons = [pistol]
+    pistol.ammo = pistol.max_ammo
+    pistol.equip()
+    weapon = pistol
+    hud.weapon = pistol
+
+
+def grant_rewards_before(index):
+    # Used by the number-key level jump, so jumping to e1m5 still gives you the shotgun
+    for level in LEVELS[:index]:
+        reward = level.get("reward_weapon")
+        if reward:
+            give_weapon(reward)
+
 
 def jump_to_level(index):
     global current_level_index
@@ -185,6 +249,8 @@ def jump_to_level(index):
     player.stage_cleared = False
     player.has_next_level = False
     player.enabled = True
+    hud.notice = ""
+    grant_rewards_before(index)
     load_current_level()
     print(f"Jumped to level {index + 1}: {LEVELS[index]['path']}")
 
@@ -204,7 +270,8 @@ def teleport_to_exit():
 
 
 def return_to_menu():
-    global current_level_entities, exit_trigger, current_enemies, active_pickups, player, weapon, hud, minimap
+    global current_level_entities, exit_trigger, current_enemies, active_pickups, player, weapon, hud, minimap, owned_weapons
+
 
     for e in current_level_entities:
         destroy(e)
@@ -218,6 +285,11 @@ def return_to_menu():
         destroy(p)
     active_pickups = []
 
+    for w in owned_weapons:
+        destroy(w)
+    owned_weapons = []
+    weapon = None
+
     if exit_trigger:
         destroy(exit_trigger)
         exit_trigger = None
@@ -225,10 +297,6 @@ def return_to_menu():
     if hud:
         destroy(hud)
         hud = None
-
-    if weapon:
-        destroy(weapon)
-        weapon = None
 
     if minimap:
         destroy(minimap)
@@ -243,12 +311,13 @@ def return_to_menu():
 
 
 def start_game():
-    global player, weapon, hud, minimap, current_level_index
+    global player, weapon, hud, owned_weapons, minimap, current_level_index
 
     current_level_index = 0
     player = Player()
     player.gravity = 0.5
     weapon = Pistol(player=player)
+    owned_weapons = [weapon]
     hud = HUD(player, weapon)
     minimap = Minimap(player, get_enemies=lambda: current_enemies)
 
@@ -271,6 +340,10 @@ def input(key):
         if player.health <= 0:
             weapon.ammo = 15
             restart_game()
+    if key == "q" or key == "scroll up":
+        cycle_weapon(1)
+    if key == "scroll down":
+        cycle_weapon(-1)
     if key == "space":
         if player.stage_cleared:
             if player.has_next_level:
